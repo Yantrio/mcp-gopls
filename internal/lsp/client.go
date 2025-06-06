@@ -69,7 +69,9 @@ func (c *Client) Initialize(ctx context.Context, rootURI string) error {
 				Definition: DefinitionClientCapabilities{},
 				References: ReferenceClientCapabilities{},
 				Hover:      HoverClientCapabilities{},
-				Rename:     RenameClientCapabilities{},
+				Rename:     RenameClientCapabilities{
+					PrepareSupport: true,
+				},
 			},
 			Workspace: WorkspaceClientCapabilities{
 				ApplyEdit: true,
@@ -275,6 +277,29 @@ func (c *Client) Hover(ctx context.Context, uri string, position Position) (*Hov
 	return &result, nil
 }
 
+func (c *Client) PrepareRename(ctx context.Context, uri string, position Position) (*PrepareRenameResult, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if !c.initialized {
+		return nil, fmt.Errorf("client not initialized")
+	}
+
+	params := PrepareRenameParams{
+		TextDocumentPositionParams: TextDocumentPositionParams{
+			TextDocument: TextDocumentIdentifier{URI: uri},
+			Position:     position,
+		},
+	}
+
+	var result *PrepareRenameResult
+	if err := c.conn.Call(ctx, "textDocument/prepareRename", params, &result); err != nil {
+		return nil, fmt.Errorf("prepareRename request failed: %w", err)
+	}
+
+	return result, nil
+}
+
 func (c *Client) Rename(ctx context.Context, uri string, position Position, newName string) (*WorkspaceEdit, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -291,12 +316,26 @@ func (c *Client) Rename(ctx context.Context, uri string, position Position, newN
 		NewName: newName,
 	}
 
-	var result WorkspaceEdit
+	var result json.RawMessage
 	if err := c.conn.Call(ctx, "textDocument/rename", params, &result); err != nil {
 		return nil, fmt.Errorf("rename request failed: %w", err)
 	}
 
-	return &result, nil
+	// Debug: log the raw response
+	fmt.Fprintf(os.Stderr, "DEBUG: Rename raw response: %s\n", string(result))
+
+	// Check if result is null
+	if string(result) == "null" || len(result) == 0 {
+		return &WorkspaceEdit{Changes: make(map[string][]TextEdit)}, nil
+	}
+
+	// Parse the workspace edit
+	var workspaceEdit WorkspaceEdit
+	if err := json.Unmarshal(result, &workspaceEdit); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal rename result: %w", err)
+	}
+
+	return &workspaceEdit, nil
 }
 
 func (c *Client) GetDiagnostics(uri string) []Diagnostic {

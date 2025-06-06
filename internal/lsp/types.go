@@ -104,7 +104,7 @@ type ServerCapabilities struct {
 	WorkspaceSymbolProvider    bool                    `json:"workspaceSymbolProvider,omitempty"`
 	CodeActionProvider         bool                    `json:"codeActionProvider,omitempty"`
 	DocumentFormattingProvider bool                    `json:"documentFormattingProvider,omitempty"`
-	RenameProvider             bool                    `json:"renameProvider,omitempty"`
+	RenameProvider             interface{}             `json:"renameProvider,omitempty"`
 	ImplementationProvider     bool                    `json:"implementationProvider,omitempty"`
 }
 
@@ -175,13 +175,33 @@ type RenameParams struct {
 	NewName string `json:"newName"`
 }
 
+type PrepareRenameParams struct {
+	TextDocumentPositionParams
+}
+
+type PrepareRenameResult struct {
+	Range       Range  `json:"range"`
+	Placeholder string `json:"placeholder"`
+}
+
 type WorkspaceEdit struct {
-	Changes map[string][]TextEdit `json:"changes,omitempty"`
+	Changes         map[string][]TextEdit               `json:"changes,omitempty"`
+	DocumentChanges []TextDocumentEdit                  `json:"documentChanges,omitempty"`
 }
 
 type TextEdit struct {
 	Range   Range  `json:"range"`
 	NewText string `json:"newText"`
+}
+
+type TextDocumentEdit struct {
+	TextDocument VersionedTextDocumentIdentifier `json:"textDocument"`
+	Edits        []TextEdit                      `json:"edits"`
+}
+
+type VersionedTextDocumentIdentifier struct {
+	TextDocumentIdentifier
+	Version int `json:"version"`
 }
 
 type Diagnostic struct {

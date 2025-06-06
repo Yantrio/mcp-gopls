@@ -61,6 +61,27 @@ Ask Claude to explain what a function does:
 
 Expected: Claude should use Hover to get the function signature and documentation
 
+### 5. Test RenameSymbol
+
+Ask Claude to rename a symbol across the codebase:
+
+```
+"Rename the Manager struct in internal/gopls/manager.go to GoplsManager"
+```
+
+Expected: Claude should show all the locations where the rename would occur, including:
+- The struct definition in internal/gopls/manager.go
+- All usages in internal/server/server.go
+- All usages in internal/tools/tools.go
+
+Or test with a smaller scope:
+
+```
+"In internal/utils/position.go, rename the ConvertPosition function to ConvertToLSPPosition"
+```
+
+Expected: Claude should show the rename locations including the function definition and all its usages
+
 ## Testing Multiple Tools Together
 
 Ask Claude to perform analysis that requires multiple tools:
@@ -139,4 +160,5 @@ If tools aren't working:
 - **FindReferences**: Returns all locations where a symbol is used
 - **GetDiagnostics**: Returns compilation errors/warnings with severity
 - **Hover**: Returns type signature and documentation
+- **RenameSymbol**: Returns all files and locations where edits would be made, with a count of total edits
 - Other tools return "Not implemented" (stubs for future work)

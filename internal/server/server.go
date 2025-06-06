@@ -48,65 +48,16 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) registerTools() {
-	// Register GoToDefinition tool
-	s.mcpServer.AddTool(
-		tools.NewGoToDefinitionTool(s.manager),
-		tools.NewGoToDefinitionHandler(s.manager),
-	)
+	// Get all tools and handlers
+	toolList := tools.GetTools(s.manager)
+	handlers := tools.GetToolHandlers(s.manager)
 
-	// Register FindReferences tool
-	s.mcpServer.AddTool(
-		tools.NewFindReferencesTool(s.manager),
-		tools.NewFindReferencesHandler(s.manager),
-	)
-
-	// Register GetDiagnostics tool
-	s.mcpServer.AddTool(
-		tools.NewGetDiagnosticsTool(s.manager),
-		tools.NewGetDiagnosticsHandler(s.manager),
-	)
-
-	// Register Hover tool
-	s.mcpServer.AddTool(
-		tools.NewHoverTool(s.manager),
-		tools.NewHoverHandler(s.manager),
-	)
-
-	// Register RenameSymbol tool
-	s.mcpServer.AddTool(
-		tools.NewRenameSymbolTool(s.manager),
-		tools.NewRenameSymbolHandler(s.manager),
-	)
-
-	// Register FindImplementers tool
-	s.mcpServer.AddTool(
-		tools.NewFindImplementersTool(s.manager),
-		tools.NewFindImplementersHandler(s.manager),
-	)
-
-	// Register ListDocumentSymbols tool
-	s.mcpServer.AddTool(
-		tools.NewListDocumentSymbolsTool(s.manager),
-		tools.NewListDocumentSymbolsHandler(s.manager),
-	)
-
-	// Register SearchSymbol tool
-	s.mcpServer.AddTool(
-		tools.NewSearchSymbolTool(s.manager),
-		tools.NewSearchSymbolHandler(s.manager),
-	)
-
-	// Register FormatCode tool
-	s.mcpServer.AddTool(
-		tools.NewFormatCodeTool(s.manager),
-		tools.NewFormatCodeHandler(s.manager),
-	)
-
-	// Register OrganizeImports tool
-	s.mcpServer.AddTool(
-		tools.NewOrganizeImportsTool(s.manager),
-		tools.NewOrganizeImportsHandler(s.manager),
-	)
+	// Register each tool with its handler
+	for _, tool := range toolList {
+		if handler, ok := handlers[tool.Name]; ok {
+			s.mcpServer.AddTool(tool, handler)
+		}
+	}
 }
 
 func (s *Server) Shutdown() error {

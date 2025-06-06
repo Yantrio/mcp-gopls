@@ -12,9 +12,9 @@ An MCP (Model Context Protocol) server that wraps gopls to provide Go language s
 - **GetDiagnostics**: Get compile errors and static analysis findings
 - **Hover**: Get information about symbols under the cursor
 - **SearchSymbol**: Search for symbols across the workspace (supports partial matching)
+- **RenameSymbol**: Rename symbols across the workspace (applies changes directly to files)
 
 ### Coming Soon
-- **RenameSymbol**: Rename symbols across the workspace
 - **FindImplementers**: Find types that implement an interface
 - **ListDocumentSymbols**: Get outline of symbols in a file
 - **FormatCode**: Format Go source code
