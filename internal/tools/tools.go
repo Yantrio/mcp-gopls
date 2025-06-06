@@ -7,6 +7,7 @@ import (
 	"github.com/yantrio/mcp-gopls/internal/tools/diagnostics"
 	"github.com/yantrio/mcp-gopls/internal/tools/find_implementers"
 	"github.com/yantrio/mcp-gopls/internal/tools/find_references"
+	"github.com/yantrio/mcp-gopls/internal/tools/format_code"
 	"github.com/yantrio/mcp-gopls/internal/tools/goto_definition"
 	"github.com/yantrio/mcp-gopls/internal/tools/hover"
 	"github.com/yantrio/mcp-gopls/internal/tools/list_document_symbols"
@@ -25,7 +26,7 @@ func GetTools(manager *gopls.Manager) []mcp.Tool {
 		find_implementers.NewTool(manager),
 		list_document_symbols.NewTool(manager),
 		stubs.NewSearchSymbolTool(manager),
-		stubs.NewFormatCodeTool(manager),
+		format_code.NewTool(manager),
 		stubs.NewOrganizeImportsTool(manager),
 	}
 }
@@ -41,7 +42,7 @@ func GetToolHandlers(manager *gopls.Manager) map[string]server.ToolHandlerFunc {
 		"FindImplementers":    find_implementers.NewHandler(manager),
 		"ListDocumentSymbols": list_document_symbols.NewHandler(manager),
 		"SearchSymbol":        stubs.NewSearchSymbolHandler(manager),
-		"FormatCode":          stubs.NewFormatCodeHandler(manager),
+		"FormatCode":          format_code.NewHandler(manager),
 		"OrganizeImports":     stubs.NewOrganizeImportsHandler(manager),
 	}
 }

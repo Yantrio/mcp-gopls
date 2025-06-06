@@ -15,9 +15,9 @@ An MCP (Model Context Protocol) server that wraps gopls to provide Go language s
 - **RenameSymbol**: Rename symbols across the workspace (applies changes directly to files)
 - **FindImplementers**: Find all types that implement an interface
 - **ListDocumentSymbols**: Get an outline of symbols defined in a file
+- **FormatCode**: Format Go source code according to gofmt standards (applies changes to files)
 
 ### Coming Soon
-- **FormatCode**: Format Go source code
 - **OrganizeImports**: Organize import statements
 
 ## Installation

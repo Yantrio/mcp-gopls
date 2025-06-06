@@ -426,6 +426,30 @@ func (c *Client) DocumentSymbols(ctx context.Context, uri string) ([]DocumentSym
 	return result, nil
 }
 
+func (c *Client) DocumentFormatting(ctx context.Context, uri string) ([]TextEdit, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if !c.initialized {
+		return nil, fmt.Errorf("client not initialized")
+	}
+
+	params := DocumentFormattingParams{
+		TextDocument: TextDocumentIdentifier{URI: uri},
+		Options: FormattingOptions{
+			TabSize:      4,
+			InsertSpaces: false, // Use tabs for Go
+		},
+	}
+
+	var edits []TextEdit
+	if err := c.conn.Call(ctx, "textDocument/formatting", params, &edits); err != nil {
+		return nil, fmt.Errorf("formatting request failed: %w", err)
+	}
+
+	return edits, nil
+}
+
 func (c *Client) WorkspaceSymbol(ctx context.Context, query string) ([]SymbolInformation, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
