@@ -21,7 +21,7 @@ func NewFindImplementersTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewFindImplementersHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return mcp.NewToolResultText("Not implemented"), nil
 	}
 }
@@ -35,7 +35,7 @@ func NewListDocumentSymbolsTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewListDocumentSymbolsHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return mcp.NewToolResultText("Not implemented"), nil
 	}
 }
@@ -58,20 +58,13 @@ func NewSearchSymbolTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewSearchSymbolHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-		args, err := json.Marshal(arguments)
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		query, err := request.RequireString("query")
 		if err != nil {
 			return nil, err
 		}
 
-		var input struct {
-			Query string `json:"query"`
-		}
-		if err := json.Unmarshal(args, &input); err != nil {
-			return nil, err
-		}
-
-		if input.Query == "" {
+		if query == "" {
 			return nil, fmt.Errorf("query cannot be empty")
 		}
 
@@ -80,8 +73,7 @@ func NewSearchSymbolHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		ctx := context.Background()
-		symbols, err := client.WorkspaceSymbol(ctx, input.Query)
+		symbols, err := client.WorkspaceSymbol(ctx, query)
 		if err != nil {
 			return nil, fmt.Errorf("workspace symbol search failed: %w", err)
 		}
@@ -121,7 +113,7 @@ func NewFormatCodeTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewFormatCodeHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return mcp.NewToolResultText("Not implemented"), nil
 	}
 }
@@ -135,7 +127,7 @@ func NewOrganizeImportsTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewOrganizeImportsHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return mcp.NewToolResultText("Not implemented"), nil
 	}
 }

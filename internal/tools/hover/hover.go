@@ -2,7 +2,6 @@ package hover
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -37,25 +36,40 @@ func NewTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-		args, _ := json.Marshal(arguments)
-
-		var input struct {
-			File   string `json:"file"`
-			Line   int    `json:"line"`
-			Column int    `json:"column"`
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		file, err := request.RequireString("file")
+		if err != nil {
+			return nil, err
 		}
-		json.Unmarshal(args, &input)
+		line, err := request.RequireInt("line")
+		if err != nil {
+			return nil, err
+		}
+		column, err := request.RequireInt("column")
+		if err != nil {
+			return nil, err
+		}
 
-		client, _ := manager.GetClient()
-		uri, _ := utils.PathToURI(input.File)
-		content, _ := os.ReadFile(input.File)
+		client, err := manager.GetClient()
+		if err != nil {
+			return nil, err
+		}
+		uri, err := utils.PathToURI(file)
+		if err != nil {
+			return nil, err
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
 
-		ctx := context.Background()
-		client.OpenDocument(ctx, uri, string(content))
+		err = client.OpenDocument(ctx, uri, string(content))
+		if err != nil {
+			return nil, err
+		}
 		defer client.CloseDocument(ctx, uri)
 
-		position := utils.ConvertPosition(input.Line, input.Column)
+		position := utils.ConvertPosition(line, column)
 		hover, err := client.Hover(ctx, uri, position)
 		if err != nil {
 			return nil, err

@@ -2,7 +2,6 @@ package organize_imports
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -33,17 +32,9 @@ func NewTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-		// Parse arguments
-		args, err := json.Marshal(arguments)
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		file, err := request.RequireString("file")
 		if err != nil {
-			return nil, err
-		}
-
-		var input struct {
-			File string `json:"file"`
-		}
-		if err := json.Unmarshal(args, &input); err != nil {
 			return nil, err
 		}
 
@@ -52,17 +43,16 @@ func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		uri, err := utils.PathToURI(input.File)
+		uri, err := utils.PathToURI(file)
 		if err != nil {
 			return nil, err
 		}
 
-		content, err := os.ReadFile(input.File)
+		content, err := os.ReadFile(file)
 		if err != nil {
 			return nil, err
 		}
 
-		ctx := context.Background()
 		if err := client.OpenDocument(ctx, uri, string(content)); err != nil {
 			return nil, err
 		}
@@ -90,15 +80,15 @@ func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 		}
 
 		if organizeImportsAction == nil {
-			return mcp.NewToolResultText(fmt.Sprintf("No import organization needed for %s", input.File)), nil
+			return mcp.NewToolResultText(fmt.Sprintf("No import organization needed for %s", file)), nil
 		}
 
 		// Apply the workspace edit if available
 		if organizeImportsAction.Edit != nil {
-			if err := applyWorkspaceEdit(input.File, organizeImportsAction.Edit); err != nil {
+			if err := applyWorkspaceEdit(file, organizeImportsAction.Edit); err != nil {
 				return nil, fmt.Errorf("failed to apply import organization: %w", err)
 			}
-			return mcp.NewToolResultText(fmt.Sprintf("Successfully organized imports in %s", input.File)), nil
+			return mcp.NewToolResultText(fmt.Sprintf("Successfully organized imports in %s", file)), nil
 		}
 
 		// If there's no edit but a command, we can't execute it directly

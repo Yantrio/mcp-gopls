@@ -2,7 +2,6 @@ package list_document_symbols
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -32,17 +31,9 @@ func NewTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-		// Parse arguments
-		args, err := json.Marshal(arguments)
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		file, err := request.RequireString("file")
 		if err != nil {
-			return nil, err
-		}
-
-		var input struct {
-			File string `json:"file"`
-		}
-		if err := json.Unmarshal(args, &input); err != nil {
 			return nil, err
 		}
 
@@ -51,17 +42,16 @@ func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		uri, err := utils.PathToURI(input.File)
+		uri, err := utils.PathToURI(file)
 		if err != nil {
 			return nil, err
 		}
 
-		content, err := os.ReadFile(input.File)
+		content, err := os.ReadFile(file)
 		if err != nil {
 			return nil, err
 		}
 
-		ctx := context.Background()
 		if err := client.OpenDocument(ctx, uri, string(content)); err != nil {
 			return nil, err
 		}
@@ -81,7 +71,7 @@ func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 		formatSymbols(symbols, "", &results)
 
 		// Format as a tree structure
-		return mcp.NewToolResultText(fmt.Sprintf("Document symbols for %s:\n\n%s", input.File, strings.Join(results, "\n"))), nil
+		return mcp.NewToolResultText(fmt.Sprintf("Document symbols for %s:\n\n%s", file, strings.Join(results, "\n"))), nil
 	}
 }
 

@@ -2,7 +2,6 @@ package format_code
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -31,17 +30,9 @@ func NewTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-		// Parse arguments
-		args, err := json.Marshal(arguments)
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		file, err := request.RequireString("file")
 		if err != nil {
-			return nil, err
-		}
-
-		var input struct {
-			File string `json:"file"`
-		}
-		if err := json.Unmarshal(args, &input); err != nil {
 			return nil, err
 		}
 
@@ -50,17 +41,16 @@ func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		uri, err := utils.PathToURI(input.File)
+		uri, err := utils.PathToURI(file)
 		if err != nil {
 			return nil, err
 		}
 
-		content, err := os.ReadFile(input.File)
+		content, err := os.ReadFile(file)
 		if err != nil {
 			return nil, err
 		}
 
-		ctx := context.Background()
 		if err := client.OpenDocument(ctx, uri, string(content)); err != nil {
 			return nil, err
 		}
@@ -73,15 +63,15 @@ func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 		}
 
 		if len(textEdits) == 0 {
-			return mcp.NewToolResultText(fmt.Sprintf("File %s is already properly formatted", input.File)), nil
+			return mcp.NewToolResultText(fmt.Sprintf("File %s is already properly formatted", file)), nil
 		}
 
 		// Apply the formatting edits to the file
-		if err := applyTextEdits(input.File, textEdits); err != nil {
+		if err := applyTextEdits(file, textEdits); err != nil {
 			return nil, fmt.Errorf("failed to apply formatting: %w", err)
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf("Successfully formatted %s", input.File)), nil
+		return mcp.NewToolResultText(fmt.Sprintf("Successfully formatted %s", file)), nil
 	}
 }
 

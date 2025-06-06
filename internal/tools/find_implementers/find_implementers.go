@@ -38,19 +38,17 @@ func NewTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-		// Parse arguments
-		args, err := json.Marshal(arguments)
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		file, err := request.RequireString("file")
 		if err != nil {
 			return nil, err
 		}
-
-		var input struct {
-			File   string `json:"file"`
-			Line   int    `json:"line"`
-			Column int    `json:"column"`
+		line, err := request.RequireInt("line")
+		if err != nil {
+			return nil, err
 		}
-		if err := json.Unmarshal(args, &input); err != nil {
+		column, err := request.RequireInt("column")
+		if err != nil {
 			return nil, err
 		}
 
@@ -59,23 +57,22 @@ func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		uri, err := utils.PathToURI(input.File)
+		uri, err := utils.PathToURI(file)
 		if err != nil {
 			return nil, err
 		}
 
-		content, err := os.ReadFile(input.File)
+		content, err := os.ReadFile(file)
 		if err != nil {
 			return nil, err
 		}
 
-		ctx := context.Background()
 		if err := client.OpenDocument(ctx, uri, string(content)); err != nil {
 			return nil, err
 		}
 		defer client.CloseDocument(ctx, uri)
 
-		position := utils.ConvertPosition(input.Line, input.Column)
+		position := utils.ConvertPosition(line, column)
 		locations, err := client.Implementation(ctx, uri, position)
 		if err != nil {
 			return nil, fmt.Errorf("implementation request failed: %w", err)

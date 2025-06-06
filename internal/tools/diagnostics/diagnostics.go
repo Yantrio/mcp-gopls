@@ -30,20 +30,29 @@ func NewTool(manager *gopls.Manager) mcp.Tool {
 }
 
 func NewHandler(manager *gopls.Manager) server.ToolHandlerFunc {
-	return func(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-		args, _ := json.Marshal(arguments)
-
-		var input struct {
-			File string `json:"file"`
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		file, err := request.RequireString("file")
+		if err != nil {
+			return nil, err
 		}
-		json.Unmarshal(args, &input)
 
-		client, _ := manager.GetClient()
-		uri, _ := utils.PathToURI(input.File)
-		content, _ := os.ReadFile(input.File)
+		client, err := manager.GetClient()
+		if err != nil {
+			return nil, err
+		}
+		uri, err := utils.PathToURI(file)
+		if err != nil {
+			return nil, err
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
 
-		ctx := context.Background()
-		client.OpenDocument(ctx, uri, string(content))
+		err = client.OpenDocument(ctx, uri, string(content))
+		if err != nil {
+			return nil, err
+		}
 		defer client.CloseDocument(ctx, uri)
 
 		lspDiagnostics := client.GetDiagnostics(uri)
