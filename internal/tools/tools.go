@@ -5,6 +5,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/yantrio/mcp-gopls/internal/gopls"
 	"github.com/yantrio/mcp-gopls/internal/tools/diagnostics"
+	"github.com/yantrio/mcp-gopls/internal/tools/find_implementers"
 	"github.com/yantrio/mcp-gopls/internal/tools/find_references"
 	"github.com/yantrio/mcp-gopls/internal/tools/goto_definition"
 	"github.com/yantrio/mcp-gopls/internal/tools/hover"
@@ -20,7 +21,7 @@ func GetTools(manager *gopls.Manager) []mcp.Tool {
 		diagnostics.NewTool(manager),
 		hover.NewTool(manager),
 		rename.NewTool(manager),
-		stubs.NewFindImplementersTool(manager),
+		find_implementers.NewTool(manager),
 		stubs.NewListDocumentSymbolsTool(manager),
 		stubs.NewSearchSymbolTool(manager),
 		stubs.NewFormatCodeTool(manager),
@@ -36,7 +37,7 @@ func GetToolHandlers(manager *gopls.Manager) map[string]server.ToolHandlerFunc {
 		"GetDiagnostics":      diagnostics.NewHandler(manager),
 		"Hover":               hover.NewHandler(manager),
 		"RenameSymbol":        rename.NewHandler(manager),
-		"FindImplementers":    stubs.NewFindImplementersHandler(manager),
+		"FindImplementers":    find_implementers.NewHandler(manager),
 		"ListDocumentSymbols": stubs.NewListDocumentSymbolsHandler(manager),
 		"SearchSymbol":        stubs.NewSearchSymbolHandler(manager),
 		"FormatCode":          stubs.NewFormatCodeHandler(manager),
