@@ -394,9 +394,33 @@ func (c *Client) DocumentSymbols(ctx context.Context, uri string) ([]DocumentSym
 		TextDocument: TextDocumentIdentifier{URI: uri},
 	}
 
-	var result []DocumentSymbol
-	if err := c.conn.Call(ctx, "textDocument/documentSymbol", params, &result); err != nil {
+	var rawResult json.RawMessage
+	if err := c.conn.Call(ctx, "textDocument/documentSymbol", params, &rawResult); err != nil {
 		return nil, fmt.Errorf("documentSymbol request failed: %w", err)
+	}
+
+	// Try to unmarshal as DocumentSymbol[]
+	var docSymbols []DocumentSymbol
+	if err := json.Unmarshal(rawResult, &docSymbols); err == nil {
+		return docSymbols, nil
+	}
+
+	// If that fails, try SymbolInformation[] and convert
+	var symInfos []SymbolInformation
+	if err := json.Unmarshal(rawResult, &symInfos); err != nil {
+		return nil, fmt.Errorf("failed to parse document symbols: %w", err)
+	}
+
+	// Convert SymbolInformation to DocumentSymbol
+	result := make([]DocumentSymbol, 0, len(symInfos))
+	for _, info := range symInfos {
+		result = append(result, DocumentSymbol{
+			Name:           info.Name,
+			Kind:           info.Kind,
+			Range:          info.Location.Range,
+			SelectionRange: info.Location.Range,
+			Children:       []DocumentSymbol{},
+		})
 	}
 
 	return result, nil
