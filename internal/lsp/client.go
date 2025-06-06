@@ -450,6 +450,31 @@ func (c *Client) DocumentFormatting(ctx context.Context, uri string) ([]TextEdit
 	return edits, nil
 }
 
+func (c *Client) CodeActionForRange(ctx context.Context, uri string, r Range) ([]CodeAction, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if !c.initialized {
+		return nil, fmt.Errorf("client not initialized")
+	}
+
+	params := CodeActionParams{
+		TextDocument: TextDocumentIdentifier{URI: uri},
+		Range:        r,
+		Context: CodeActionContext{
+			Diagnostics: []Diagnostic{},
+			Only:        []CodeActionKind{CodeActionKindSourceOrganizeImports},
+		},
+	}
+
+	var actions []CodeAction
+	if err := c.conn.Call(ctx, "textDocument/codeAction", params, &actions); err != nil {
+		return nil, fmt.Errorf("code action request failed: %w", err)
+	}
+
+	return actions, nil
+}
+
 func (c *Client) WorkspaceSymbol(ctx context.Context, query string) ([]SymbolInformation, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()

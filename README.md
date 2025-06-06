@@ -6,7 +6,7 @@ An MCP (Model Context Protocol) server that wraps gopls to provide Go language s
 
 ## Features
 
-### Implemented
+All gopls language server features are now implemented:
 - **GoToDefinition**: Navigate to the definition of a symbol
 - **FindReferences**: Find all references to a symbol  
 - **GetDiagnostics**: Get compile errors and static analysis findings
@@ -16,9 +16,7 @@ An MCP (Model Context Protocol) server that wraps gopls to provide Go language s
 - **FindImplementers**: Find all types that implement an interface
 - **ListDocumentSymbols**: Get an outline of symbols defined in a file
 - **FormatCode**: Format Go source code according to gofmt standards (applies changes to files)
-
-### Coming Soon
-- **OrganizeImports**: Organize import statements
+- **OrganizeImports**: Organize import statements (groups and sorts imports, applies changes to files)
 
 ## Installation
 

@@ -11,6 +11,7 @@ import (
 	"github.com/yantrio/mcp-gopls/internal/tools/goto_definition"
 	"github.com/yantrio/mcp-gopls/internal/tools/hover"
 	"github.com/yantrio/mcp-gopls/internal/tools/list_document_symbols"
+	"github.com/yantrio/mcp-gopls/internal/tools/organize_imports"
 	"github.com/yantrio/mcp-gopls/internal/tools/rename"
 	"github.com/yantrio/mcp-gopls/internal/tools/stubs"
 )
@@ -27,7 +28,7 @@ func GetTools(manager *gopls.Manager) []mcp.Tool {
 		list_document_symbols.NewTool(manager),
 		stubs.NewSearchSymbolTool(manager),
 		format_code.NewTool(manager),
-		stubs.NewOrganizeImportsTool(manager),
+		organize_imports.NewTool(manager),
 	}
 }
 
@@ -43,6 +44,6 @@ func GetToolHandlers(manager *gopls.Manager) map[string]server.ToolHandlerFunc {
 		"ListDocumentSymbols": list_document_symbols.NewHandler(manager),
 		"SearchSymbol":        stubs.NewSearchSymbolHandler(manager),
 		"FormatCode":          format_code.NewHandler(manager),
-		"OrganizeImports":     stubs.NewOrganizeImportsHandler(manager),
+		"OrganizeImports":     organize_imports.NewHandler(manager),
 	}
 }
